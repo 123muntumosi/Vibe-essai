@@ -22,11 +22,11 @@
         <form id="register-form">
             <div class="input-group">
                 <label>Nom complet</label>
-                <input type="text" id="name" required placeholder="Ex: nom d'utilisateur">
+                <input type="text" id="name" required placeholder="Ex: Exaucias Tobe">
             </div>
             <div class="input-group">
-                <label>Adresse E-mail</label>
-                <input type="email" id="email" required placeholder="exemple@gmail.com ou @icloud.com">
+                <label>Numéro de mobile (WhatsApp)</label>
+                <input type="tel" id="phone" required placeholder="Ex: +243999999999">
             </div>
             <div class="input-group">
                 <label>Mot de passe</label>
@@ -35,7 +35,7 @@
             <button type="submit" id="submit-btn">Envoyer le code de vérification</button>
         </form>
         <div id="response-message"></div>
-        <p class="note">Votre e-mail sera votre identifiant unique sur TMA Network.</p>
+        <p class="note">Votre numéro de mobile sera votre identifiant unique sur TMA Network.</p>
     </div>
 
     <script>
@@ -49,10 +49,10 @@
             submitBtn.textContent = 'Envoi en cours...';
             responseMessage.textContent = '';
 
-            const userEmail = document.getElementById('email').value;
+            const userPhone = document.getElementById('phone').value;
             const formData = {
                 name: document.getElementById('name').value,
-                email: userEmail,
+                phone: userPhone,
                 password: document.getElementById('password').value
             };
 
@@ -66,8 +66,8 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // BASCULEMENT VERS LA PAGE VERIFY (en lui passant l'e-mail dans l'URL)
-                    window.location.href = `/verify.html?email=${encodeURIComponent(userEmail)}`;
+                    // BASCULEMENT VERS LA PAGE VERIFY (en lui passant le numéro dans l'URL)
+                    window.location.href = `/verify.html?phone=${encodeURIComponent(userPhone)}`;
                 } else {
                     responseMessage.style.color = '#ef4444';
                     responseMessage.textContent = data.error || 'Une erreur est survenue.';
