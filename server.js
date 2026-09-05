@@ -61,7 +61,7 @@ app.post('/register-action', async (req, res) => {
         );
         
         // Remplacez "243000000000" par votre propre numéro WhatsApp administrateur (au format international sans le +)
-        const adminWhatsAppPhone = "243000000000"; 
+        const adminWhatsAppPhone = "243860772719"; 
 
         // Création du lien wa.me
         const whatsappUrl = `https://wa.me/${adminWhatsAppPhone}?text=${message}`;
