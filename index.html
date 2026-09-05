@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Créer un compte TMA - Inscription</title>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .form-container { background: #1e293b; padding: 40px; border-radius: 24px; width: 100%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        h2 { color: #38bdf8; text-align: center; margin-bottom: 25px; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #94a3b8; font-size: 0.9rem; }
+        input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; background: #2563eb; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #1d4ed8; }
+        .note { font-size: 0.8rem; color: #64748b; text-align: center; margin-top: 15px; }
+        #response-message { margin-top: 15px; text-align: center; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Inscription</h2>
+        <form id="register-form">
+            <div class="input-group">
+                <label>Nom complet</label>
+                <input type="text" id="name" required placeholder="Ex: nom d'utilisateur">
+            </div>
+            <div class="input-group">
+                <label>Adresse E-mail</label>
+                <input type="email" id="email" required placeholder="exemple@gmail.com ou @icloud.com">
+            </div>
+            <div class="input-group">
+                <label>Mot de passe</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" id="submit-btn">Envoyer le code de vérification</button>
+        </form>
+        <div id="response-message"></div>
+        <p class="note">Votre e-mail sera votre identifiant unique sur TMA Network.</p>
+    </div>
+
+    <script>
+        const registerForm = document.getElementById('register-form');
+        const responseMessage = document.getElementById('response-message');
+        const submitBtn = document.getElementById('submit-btn');
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Envoi en cours...';
+            responseMessage.textContent = '';
+
+            const userEmail = document.getElementById('email').value;
+            const formData = {
+                name: document.getElementById('name').value,
+                email: userEmail,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/register-action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // BASCULEMENT VERS LA PAGE VERIFY (en lui passant l'e-mail dans l'URL)
+                    window.location.href = `/verify.html?email=${encodeURIComponent(userEmail)}`;
+                } else {
+                    responseMessage.style.color = '#ef4444';
+                    responseMessage.textContent = data.error || 'Une erreur est survenue.';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Envoyer le code de vérification';
+                }
+            } catch (error) {
+                responseMessage.style.color = '#ef4444';
+                responseMessage.textContent = 'Erreur de connexion au serveur.';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Envoyer le code de vérification';
+            }
+        });
+    </script>
+</body>
+</html>
