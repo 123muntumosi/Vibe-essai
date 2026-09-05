@@ -1,37 +1,34 @@
 const express = require('express');
 const path = require('path');
-const twilio = require('twilio');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- CONFIGURATION TWILIO ---
-// Sur Render, vous pourrez stocker ces valeurs dans les "Environment Variables" 
-// ou les mettre directement ici pour vos tests.
-const accountSid = process.env.TWILIO_ACCOUNT_SID || 'VOTRE_ACCOUNT_SID_TWILIO';
-const authToken = process.env.TWILIO_AUTH_TOKEN || 'VOTRE_AUTH_TOKEN_TWILIO';
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+1XXXXXXXXXX'; // Votre numéro Twilio
-
-const client = twilio(accountSid, authToken);
-
 // --- MIDDLEWARES ---
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Permet de servir les fichiers statiques directement depuis le dossier principal
 app.use(express.static(__dirname));
 
-// Stockage temporaire en mémoire
+// Stockage temporaire en mémoire des utilisateurs en attente de validation (par numéro de téléphone)
 const pendingUsers = new Map();
 
-// --- ROUTES HTML ---
+// --- ROUTES POUR AFFICHER LES PAGES HTML ---
+
+// Route pour la page d'inscription (Accueil)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Route pour la page de vérification
 app.get('/verify.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'verify.html'));
 });
 
-// --- API INSCRIPTION & ENVOI DU SMS ---
+
+// --- ROUTES POUR TRAITER LES ACTIONS (API) ---
+
 app.post('/register-action', async (req, res) => {
     const { name, phone, password } = req.body;
 
@@ -42,6 +39,7 @@ app.post('/register-action', async (req, res) => {
     try {
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
+        // On stocke l'utilisateur en utilisant son numéro de téléphone comme clé
         pendingUsers.set(phone, {
             name,
             phone,
@@ -50,29 +48,40 @@ app.post('/register-action', async (req, res) => {
             createdAt: Date.now()
         });
 
-        // ENVOI DU VRAI SMS VIA TWILIO
-        await client.messages.create({
-            body: `Votre code de verification TMA est : ${verificationCode}`,
-            from: twilioPhoneNumber,
-            to: phone // Numéro au format international (ex: +243...)
-        });
+        console.log(`[DEV WhatsApp] Code pour ${phone} -> ${verificationCode}`);
 
-        console.log(`[SMS Twilio Envoyé] Code ${verificationCode} envoyé à ${phone}`);
+        // --- INTÉGRATION WHATSAPP (Redirection gratuite) ---
+        // Message professionnel et structuré aux couleurs de Vibe
+        const message = encodeURIComponent(
+            `Verification Vibe Network\n\n` +
+            `Nom: ${name}\n` +
+            `Telephone: ${phone}\n` +
+            `Code de validation: ${verificationCode}\n\n` +
+            `Veuillez valider mon inscription.`
+        );
+        
+        // Remplacez "243000000000" par votre propre numéro WhatsApp administrateur (au format international sans le +)
+        const adminWhatsAppPhone = "243000000000"; 
+
+        // Création du lien wa.me
+        const whatsappUrl = `https://wa.me/${adminWhatsAppPhone}?text=${message}`;
 
         return res.status(200).json({ 
             success: true, 
-            message: 'SMS de vérification envoyé avec succès.' 
+            message: 'Code généré avec succès.',
+            whatsappUrl: whatsappUrl, // Transmis au front-end pour rediriger l'utilisateur
+            phone: phone
         });
 
     } catch (error) {
-        console.error('Erreur Twilio :', error);
-        return res.status(500).json({ error: "Erreur lors de l'envoi du SMS. Vérifiez le format du numéro." });
+        console.error('Erreur inscription :', error);
+        return res.status(500).json({ error: 'Erreur interne du serveur.' });
     }
 });
 
-// --- API VÉRIFICATION DU CODE ---
 app.post('/verify-code', (req, res) => {
     const { phone, code } = req.body;
+
     const userData = pendingUsers.get(phone);
 
     if (!userData) {
@@ -85,14 +94,15 @@ app.post('/verify-code', (req, res) => {
 
         return res.status(200).json({ 
             success: true, 
-            message: 'Compte vérifié avec succès ! Bienvenue sur TMA.' 
+            message: 'Compte vérifié avec succès ! Bienvenue sur Vibe.' 
         });
     } else {
         return res.status(400).json({ error: 'Code de vérification incorrect.' });
     }
 });
 
+
+// --- LANCEMENT DU SERVEUR ---
 app.listen(PORT, () => {
     console.log(`Serveur démarré et actif sur le port ${PORT}`);
 });
-    
