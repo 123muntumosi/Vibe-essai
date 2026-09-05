@@ -25,7 +25,7 @@
                 <input type="text" id="name" required placeholder="Ex: Exaucias Tobe">
             </div>
             <div class="input-group">
-                <label>Numéro de mobile (WhatsApp)</label>
+                <label>Numéro de mobile</label>
                 <input type="tel" id="phone" required placeholder="Ex: +243999999999">
             </div>
             <div class="input-group">
@@ -46,7 +46,7 @@
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Envoi en cours...';
+            submitBtn.textContent = 'Envoi du SMS en cours...';
             responseMessage.textContent = '';
 
             const userPhone = document.getElementById('phone').value;
@@ -66,8 +66,12 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // BASCULEMENT VERS LA PAGE VERIFY (en lui passant le numéro dans l'URL)
-                    window.location.href = `/verify.html?phone=${encodeURIComponent(userPhone)}`;
+                    responseMessage.style.color = '#22c55e';
+                    responseMessage.textContent = 'SMS envoyé avec succès ! Redirection...';
+                    // BASCULEMENT VERS LA PAGE VERIFY après un court instant
+                    setTimeout(() => {
+                        window.location.href = `/verify.html?phone=${encodeURIComponent(userPhone)}`;
+                    }, 1500);
                 } else {
                     responseMessage.style.color = '#ef4444';
                     responseMessage.textContent = data.error || 'Une erreur est survenue.';
