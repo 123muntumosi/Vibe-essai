@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,18 +11,8 @@ app.use(express.urlencoded({ extended: true }));
 // Permet de servir les fichiers statiques directement depuis le dossier principal
 app.use(express.static(__dirname));
 
-// Stockage temporaire en mémoire des utilisateurs en attente de validation
+// Stockage temporaire en mémoire des utilisateurs en attente de validation (par numéro de téléphone)
 const pendingUsers = new Map();
-
-// --- CONFIGURATION NODEMAILER (Optionnel pour l'envoi d'e-mails) ---
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'votre-email@gmail.com',         
-        pass: 'votre-mot-de-passe-d-application' 
-    }
-});
-
 
 // --- ROUTES POUR AFFICHER LES PAGES HTML ---
 
@@ -41,28 +30,33 @@ app.get('/verify.html', (req, res) => {
 // --- ROUTES POUR TRAITER LES ACTIONS (API) ---
 
 app.post('/register-action', async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, phone, password } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name || !phone || !password) {
         return res.status(400).json({ error: "Tous les champs sont obligatoires." });
     }
 
     try {
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        pendingUsers.set(email, {
+        // On stocke l'utilisateur en utilisant son numéro de téléphone comme clé
+        pendingUsers.set(phone, {
             name,
-            email,
+            phone,
             password,
             code: verificationCode,
             createdAt: Date.now()
         });
 
-        console.log(`[DEV] Code envoyé à ${email} -> ${verificationCode}`);
+        console.log(`[DEV WhatsApp] Code pour ${phone} -> ${verificationCode}`);
+
+        // Ici, si vous connectez une API WhatsApp (comme Twilio ou autre), l'appel d'envoi se ferait ici.
+        // Pour l'instant, le serveur génère le code et valide l'inscription.
 
         return res.status(200).json({ 
             success: true, 
-            message: 'Code envoyé avec succès.' 
+            message: 'Code généré avec succès.',
+            code: verificationCode // Renvoyé temporairement pour vos tests si besoin
         });
 
     } catch (error) {
@@ -72,17 +66,17 @@ app.post('/register-action', async (req, res) => {
 });
 
 app.post('/verify-code', (req, res) => {
-    const { email, code } = req.body;
+    const { phone, code } = req.body;
 
-    const userData = pendingUsers.get(email);
+    const userData = pendingUsers.get(phone);
 
     if (!userData) {
-        return res.status(400).json({ error: "Session expirée ou e-mail introuvable." });
+        return res.status(400).json({ error: "Session expirée ou numéro introuvable." });
     }
 
     if (userData.code === code) {
-        console.log(`Utilisateur ${userData.name} (${email}) vérifié avec succès !`);
-        pendingUsers.delete(email);
+        console.log(`Utilisateur ${userData.name} (${phone}) vérifié avec succès !`);
+        pendingUsers.delete(phone);
 
         return res.status(200).json({ 
             success: true, 
