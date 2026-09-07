@@ -20,11 +20,11 @@
     <div class="card">
         <div class="logo-small">🐾</div>
         <h2>Vérification</h2>
-        <p>Entrez le code de validation reçu par SMS :</p>
+        <p>Entrez le code de validation reçu par e-mail :</p>
         
         <form id="verify-form">
-            <!-- On garde le numéro de téléphone en champ caché pour savoir à quel compte lier le code -->
-            <input type="hidden" id="hiddenPhone">
+            <!-- On garde l'e-mail en champ caché pour savoir à quel compte lier le code -->
+            <input type="hidden" id="hiddenEmail">
             <input type="text" id="code" placeholder="123456" maxlength="6" required>
             <button type="submit" id="verify-btn">Valider le code</button>
         </form>
@@ -32,15 +32,15 @@
     </div>
 
     <script>
-        // Récupérer le numéro de téléphone transmis dans l'URL (?phone=...)
+        // Récupérer l'e-mail transmis dans l'URL (?email=...)
         const urlParams = new URLSearchParams(window.location.search);
-        const phone = urlParams.get('phone');
+        const email = urlParams.get('email');
         
-        if(phone) {
-            document.getElementById('hiddenPhone').value = phone;
+        if(email) {
+            document.getElementById('hiddenEmail').value = email;
         } else {
-            document.getElementById('response-message').style.color = '#ef4444';
-            document.getElementById('response-message').textContent = "Numéro introuvable. Veuillez recommencer.";
+            document.getElementById('response-message'].style.color = '#ef4444'; // Corrigé
+            document.getElementById('response-message').textContent = "E-mail introuvable. Veuillez recommencer.";
             document.getElementById('verify-btn').disabled = true;
         }
 
@@ -55,13 +55,13 @@
             responseMessage.textContent = '';
 
             const code = document.getElementById('code').value;
-            const targetPhone = document.getElementById('hiddenPhone').value;
+            const targetEmail = document.getElementById('hiddenEmail').value;
 
             try {
                 const response = await fetch('/verify-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: targetPhone, code: code })
+                    body: JSON.stringify({ email: targetEmail, code: code })
                 });
 
                 const data = await response.json();
